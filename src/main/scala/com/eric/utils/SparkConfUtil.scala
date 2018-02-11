@@ -30,7 +30,6 @@ object SparkConfUtil {
       val key = keys.next().asInstanceOf[String]
       sparkConf.set(key, conf.getString(key))
     }
-    //modify by chengqiujiang 20170726
     val nodeNum = 5
     if (nodeNum > 1) {
       val value = (sparkConf.get("spark.cores.max").toInt * nodeNum).toString
