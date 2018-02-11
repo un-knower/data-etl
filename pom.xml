@@ -13,8 +13,8 @@
         <bigdata.ude.version>1.2-RELEASE</bigdata.ude.version>
         <elasticsearch.version>2.1.1</elasticsearch.version>
         <jedis.version>2.9.0</jedis.version>
-        <hadoop.version>2.6.0-cdh5.7.0</hadoop.version>
-        <hbase.version>1.2.0-cdh5.7.0</hbase.version>
+        <hadoop.version>2.6.0</hadoop.version>
+        <hbase.version>1.2.0</hbase.version>
         <spring.version>3.2.14.RELEASE</spring.version>
         <mybatis.version>3.3.1</mybatis.version>
         <mybatis.spring.version>1.2.4</mybatis.spring.version>
