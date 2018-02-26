@@ -1,6 +1,7 @@
 package com.eric.process
 
 import com.eric.common.DateTimeUtils
+import com.eric.meta.HBaseVehicleRecord
 import org.apache.hadoop.hbase.HBaseConfiguration
 import org.apache.hadoop.hbase.client.Scan
 import org.apache.hadoop.hbase.mapreduce.TableInputFormat
@@ -20,7 +21,7 @@ object DataLoadJob {
 
   val vehicleInfoTablePropertyFamily = "cf"
 
-  val vehicleInfoTablePropertyColumn = "property"
+  val vehicleDataPropertyColumn = "data"
 
   val vehicleInfoTableCountFamily = "cfd"
 
@@ -34,13 +35,10 @@ object DataLoadJob {
 
     // (vehiclelogo, vehicletype, vehiclecolor)
     scan.addFamily(Bytes.toBytes(vehicleInfoTablePropertyFamily))
-    scan.addColumn(Bytes.toBytes(vehicleInfoTablePropertyFamily), Bytes.toBytes(vehicleInfoTablePropertyColumn))
+    scan.addColumn(Bytes.toBytes(vehicleInfoTablePropertyFamily), Bytes.toBytes(vehicleDataPropertyColumn))
 
     val benchmarkTime = DateTimeUtils.getDateBeginTime(System.currentTimeMillis()) //当天0点
-    LOGGER.info("benchmarkTime: {}", benchmarkTime)
-    // (daycount, totlecount)
-    scan.addFamily(Bytes.toBytes(vehicleInfoTableCountFamily))
-    scan.addColumn(Bytes.toBytes(vehicleInfoTableCountFamily), Bytes.toBytes(DateTimeUtils.format(benchmarkTime)))
+
     LOGGER.info("cfd: {}", DateTimeUtils.format(benchmarkTime))
 
     scan.setCaching(scanBatch)
@@ -53,40 +51,22 @@ object DataLoadJob {
       classOf[org.apache.hadoop.hbase.io.ImmutableBytesWritable],
       classOf[org.apache.hadoop.hbase.client.Result])
 
-    val vehicleInfoRDD = flowResultRDD.filter(
+    val vehicleRDD = flowResultRDD.map(
       res=> {
         //过滤掉最近一个月未出现的车辆
-        val oldest = Bytes.toString(res._2.getValue(Bytes.toBytes(vehicleInfoTableCountFamily), Bytes.toBytes(DateTimeUtils.format(benchmarkTime , "yyMMdd"))))
-        val latest = Bytes.toString(res._2.getValue(Bytes.toBytes(vehicleInfoTableCountFamily), Bytes.toBytes(DateTimeUtils.format(benchmarkTime , "yyMMdd"))))
-        (null != latest) && ((null == oldest) || (latest.split(",")(1).toInt - oldest.split(",")(1).toInt >= 1))
-      }).map(res =>{
-      var plateNo = Bytes.toString(res._2.getRow)
-      if (plateNo.length <= 2) {
-        plateNo = "4-车牌"
-      }
-
-      val platebelong = plateNo.substring(2, 4)
-      val property = Bytes.toString(res._2.getValue(Bytes.toBytes(vehicleInfoTablePropertyFamily), Bytes.toBytes(vehicleInfoTablePropertyColumn)))
-      val propertys = property.split(",")
-      if (3 != propertys.length) {
-        // (vehiclelogo, vehicletype, vehiclecolor)
-        propertys(0) = "0"
-        propertys(1) = "0"
-        propertys(2) = "0"
-      }
-      val benchmarkCount = Bytes.toString(res._2.getValue(Bytes.toBytes(vehicleInfoTableCountFamily), Bytes.toBytes(DateTimeUtils.format(benchmarkTime , "yyMMdd"))))
-      val firstCount = benchmarkCount.split(",")(0).toLong
-      val totalCount = benchmarkCount.split(",")(1).toInt
-
-    })
+        val rowKey: String = Bytes.toString(res._2.getRow)
+        val dataJson: String = Bytes.toString(res._2.getValue(Bytes.toBytes("cf"), Bytes.toBytes("data")))
+        val hBaseVehicleRecord = new HBaseVehicleRecord(rowKey, dataJson)
+        hBaseVehicleRecord
+      })
     import sparkSession.implicits._
-    val vehicleInfoDS = vehicleInfoRDD
-    vehicleInfoDS.repartition(3)
+    val vehicleDS = vehicleRDD
+    vehicleDS.repartition(3)
 
-    LOGGER.info("vehicleInfoDS count: {}", vehicleInfoDS.count())
+    LOGGER.info("vehicleInfoDS count: {}", vehicleDS.count())
     val time = System.currentTimeMillis() - startTime
     LOGGER.info("fetch vehicleInfoDS take time: {}", time)
-    vehicleInfoDS
+    vehicleDS
   }
 
   def loadFromKafka(sparkSession: SparkSession, startOffSet:String , count: Int) = {}

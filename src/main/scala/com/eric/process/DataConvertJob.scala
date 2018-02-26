@@ -12,7 +12,7 @@ object DataConvertJob {
   val LOGGER = LoggerFactory.getLogger(DataConvertJob.getClass)
 
   def loadData(sparkSession: SparkSession, startTime: String, stopTime: String) = {
-
+    DataLoadJob.loadFromHBase(sparkSession, startTime, stopTime);
   }
 
   def convert(sparkSession: SparkSession) = {
