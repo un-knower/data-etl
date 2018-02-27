@@ -1,13 +1,15 @@
 package com.eric.process
 
 import com.eric.common.DateTimeUtils
+import com.eric.data.VehicleData
 import com.eric.meta.HBaseVehicleRecord
 import org.apache.hadoop.hbase.HBaseConfiguration
 import org.apache.hadoop.hbase.client.Scan
 import org.apache.hadoop.hbase.mapreduce.TableInputFormat
 import org.apache.hadoop.hbase.protobuf.ProtobufUtil
 import org.apache.hadoop.hbase.util.{Base64, Bytes}
-import org.apache.spark.sql.SparkSession
+import org.apache.spark.rdd.RDD
+import org.apache.spark.sql.{Dataset, SparkSession}
 import org.slf4j.LoggerFactory
 
 /**
@@ -27,7 +29,9 @@ object DataLoadJob {
 
   val scanBatch = 500
 
-  def loadFromHBase(sparkSession: SparkSession, startTime: String, stopTime: String) = {
+  def loadFromHBase(spark: SparkSession, startTime: String, stopTime: String): Dataset[VehicleData] = {
+    import spark.implicits._
+
     val startTime = System.currentTimeMillis()
     val conf = HBaseConfiguration.create()
     conf.set(TableInputFormat.INPUT_TABLE, vehicleInfoTable)
@@ -47,23 +51,24 @@ object DataLoadJob {
     conf.set(TableInputFormat.SCAN, Base64.encodeBytes(proto.toByteArray()))
 
     // 获取过车分析结果表记录
-    val flowResultRDD = sparkSession.sparkContext.newAPIHadoopRDD(conf, classOf[TableInputFormat],
+    val flowResultRDD = spark.sparkContext.newAPIHadoopRDD(conf, classOf[TableInputFormat],
       classOf[org.apache.hadoop.hbase.io.ImmutableBytesWritable],
       classOf[org.apache.hadoop.hbase.client.Result])
 
+    val array = Array(1,2,3)
+    array(0)
     val vehicleRDD = flowResultRDD.map(
       res=> {
         //过滤掉最近一个月未出现的车辆
         val rowKey: String = Bytes.toString(res._2.getRow)
         val dataJson: String = Bytes.toString(res._2.getValue(Bytes.toBytes("cf"), Bytes.toBytes("data")))
-        val hBaseVehicleRecord = new HBaseVehicleRecord(rowKey, dataJson)
-        hBaseVehicleRecord
+        val hBaseVehicleRecord = new HBaseVehicleRecord(rowKey, dataJson).getArrayData
+        val vehicleData =  VehicleData(hBaseVehicleRecord(0), hBaseVehicleRecord(1).asInstanceOf[Int], hBaseVehicleRecord(2).asInstanceOf[Int], hBaseVehicleRecord(3).asInstanceOf[Long])
+        vehicleData
       })
-    import sparkSession.implicits._
-    val vehicleDS = vehicleRDD
-    vehicleDS.repartition(3)
+    val vehicleDS = vehicleRDD.toDS()
 
-    LOGGER.info("vehicleInfoDS count: {}", vehicleDS.count())
+    LOGGER.info("vehicleInfoDS count: {}", vehicleRDD.take(2))
     val time = System.currentTimeMillis() - startTime
     LOGGER.info("fetch vehicleInfoDS take time: {}", time)
     vehicleDS

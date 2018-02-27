@@ -26,7 +26,7 @@
         <cglib.version>3.2.2</cglib.version>
         <spark.version>2.1.0</spark.version>
         <kafka.version>0.9.0.1</kafka.version>
-        <scala.version>2.10.4</scala.version>
+        <scala.version>2.11.8</scala.version>
         <cxf.version>2.7.18</cxf.version>
         <maven.jar.plugin.version>2.6</maven.jar.plugin.version>
         <maven.war.plugin.version>2.6</maven.war.plugin.version>
@@ -39,6 +39,33 @@
     </properties>
     <build>
         <plugins>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-assembly-plugin</artifactId>
+                <version>2.3</version>
+                <configuration>
+                    <appendAssemblyId>false</appendAssemblyId>
+                    <descriptorRefs>
+                        <descriptorRef>jar-with-dependencies</descriptorRef>
+                    </descriptorRefs>
+                    <archive>
+                        <manifest>
+                            <mainClass>com.eric.DataExportTask</mainClass>
+                        </manifest>
+                    </archive>
+                    <finalName>dataExport</finalName>
+                </configuration>
+
+                <executions>
+                    <execution>
+                        <id>make-assembly</id>
+                        <phase>package</phase>
+                        <goals>
+                            <goal>assembly</goal>
+                        </goals>
+                    </execution>
+                </executions>
+            </plugin>
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-compiler-plugin</artifactId>
@@ -85,7 +112,7 @@
         </dependency>
         <dependency>
             <groupId>org.scalatest</groupId>
-            <artifactId>scalatest_2.10</artifactId>
+            <artifactId>scalatest_2.11</artifactId>
             <version>2.2.4</version>
             <scope>test</scope>
         </dependency>
@@ -96,12 +123,12 @@
         </dependency>
         <dependency>
             <groupId>org.apache.spark</groupId>
-            <artifactId>spark-sql_2.10</artifactId>
+            <artifactId>spark-sql_2.11</artifactId>
             <version>${spark.version}</version>
         </dependency>
         <dependency>
             <groupId>org.apache.spark</groupId>
-            <artifactId>spark-core_2.10</artifactId>
+            <artifactId>spark-core_2.11</artifactId>
             <version>${spark.version}</version>
             <exclusions>
                 <exclusion>
