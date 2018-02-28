@@ -1,8 +1,6 @@
 package com.eric.process
 
-import com.eric.data.VehicleData
-import org.apache.spark.SparkContext
-import org.apache.spark.sql.{DataFrame, Dataset, SparkSession}
+import org.apache.spark.sql.{DataFrame, SparkSession}
 import org.slf4j.LoggerFactory
 
 /**
@@ -11,7 +9,7 @@ import org.slf4j.LoggerFactory
   */
 object DataConvertJob {
   val LOGGER = LoggerFactory.getLogger(DataConvertJob.getClass)
-  val PATH = "/home/recources/data.csv"
+  val PATH = "/home/recources/data1.csv"
 
   def loadData(sparkSession: SparkSession, startTime: String, stopTime: String):DataFrame = {
     val ds = DataLoadJob.loadFromHBase(sparkSession, startTime, stopTime)
@@ -26,6 +24,7 @@ object DataConvertJob {
   }
 
   def saveData(vehicleDF: DataFrame) = {
+
     vehicleDF.write.csv(PATH)
 
   }

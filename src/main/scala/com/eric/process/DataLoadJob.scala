@@ -8,7 +8,6 @@ import org.apache.hadoop.hbase.client.Scan
 import org.apache.hadoop.hbase.mapreduce.TableInputFormat
 import org.apache.hadoop.hbase.protobuf.ProtobufUtil
 import org.apache.hadoop.hbase.util.{Base64, Bytes}
-import org.apache.spark.rdd.RDD
 import org.apache.spark.sql.{Dataset, SparkSession}
 import org.slf4j.LoggerFactory
 
@@ -55,18 +54,26 @@ object DataLoadJob {
       classOf[org.apache.hadoop.hbase.io.ImmutableBytesWritable],
       classOf[org.apache.hadoop.hbase.client.Result])
 
-    val array = Array(1,2,3)
-    array(0)
+
     val vehicleRDD = flowResultRDD.map(
       res=> {
         //过滤掉最近一个月未出现的车辆
         val rowKey: String = Bytes.toString(res._2.getRow)
         val dataJson: String = Bytes.toString(res._2.getValue(Bytes.toBytes("cf"), Bytes.toBytes("data")))
         val hBaseVehicleRecord = new HBaseVehicleRecord(rowKey, dataJson).getArrayData
-        val vehicleData =  VehicleData(hBaseVehicleRecord(0), hBaseVehicleRecord(1).asInstanceOf[Int], hBaseVehicleRecord(2).asInstanceOf[Int], hBaseVehicleRecord(3).asInstanceOf[Long])
+        val vehicleData =  VehicleData(hBaseVehicleRecord(6), hBaseVehicleRecord(8), hBaseVehicleRecord(3), hBaseVehicleRecord(2).toLong)
         vehicleData
       })
     val vehicleDS = vehicleRDD.toDS()
+
+    val test1 = flowResultRDD.take(1).map(res => {
+      val rowKey: String = Bytes.toString(res._2.getRow)
+      val dataJson: String = Bytes.toString(res._2.getValue(Bytes.toBytes("cf"), Bytes.toBytes("data")))
+      (rowKey, dataJson)
+      val hBaseVehicleRecord = new HBaseVehicleRecord(rowKey, dataJson).getArrayData
+      val vehicleData =  VehicleData(hBaseVehicleRecord(6), hBaseVehicleRecord(8), hBaseVehicleRecord(3), hBaseVehicleRecord(2).toLong)
+      vehicleData
+    })
 
     LOGGER.info("vehicleInfoDS count: {}", vehicleRDD.take(2))
     val time = System.currentTimeMillis() - startTime
