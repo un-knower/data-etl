@@ -61,7 +61,7 @@ object DataLoadJob {
         val rowKey: String = Bytes.toString(res._2.getRow)
         val dataJson: String = Bytes.toString(res._2.getValue(Bytes.toBytes("cf"), Bytes.toBytes("data")))
         val hBaseVehicleRecord = new HBaseVehicleRecord(rowKey, dataJson).getArrayData
-        val vehicleData =  VehicleData(hBaseVehicleRecord(6), hBaseVehicleRecord(8), hBaseVehicleRecord(3), hBaseVehicleRecord(2).toLong)
+        val vehicleData =  VehicleData(hBaseVehicleRecord(6), hBaseVehicleRecord(8), hBaseVehicleRecord(3), hBaseVehicleRecord(2))
         vehicleData
       })
     val vehicleDS = vehicleRDD.toDS()
@@ -71,7 +71,7 @@ object DataLoadJob {
       val dataJson: String = Bytes.toString(res._2.getValue(Bytes.toBytes("cf"), Bytes.toBytes("data")))
       (rowKey, dataJson)
       val hBaseVehicleRecord = new HBaseVehicleRecord(rowKey, dataJson).getArrayData
-      val vehicleData =  VehicleData(hBaseVehicleRecord(6), hBaseVehicleRecord(8), hBaseVehicleRecord(3), hBaseVehicleRecord(2).toLong)
+      val vehicleData =  VehicleData(hBaseVehicleRecord(6), hBaseVehicleRecord(8), hBaseVehicleRecord(3), hBaseVehicleRecord(2))
       vehicleData
     })
 

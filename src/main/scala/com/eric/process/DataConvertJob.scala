@@ -1,6 +1,8 @@
 package com.eric.process
 
-import org.apache.spark.sql.{DataFrame, SparkSession}
+import com.eric.common.DateTimeUtils
+import com.eric.data.VehicleData
+import org.apache.spark.sql.{Dataset, DataFrame, SparkSession}
 import org.slf4j.LoggerFactory
 
 /**
@@ -16,10 +18,16 @@ object DataConvertJob {
     ds.toDF()
   }
 
-  def convert(sparkSession: SparkSession) = {
+  def convert(sparkSession: SparkSession, dataSet: Dataset[VehicleData]) = {
     import sparkSession.implicits._
-
-
+    val dateDS = dataSet.map(record => {
+      val a = record.copy(passtime = {
+        DateTimeUtils.format(record.passtime.toLong, "yyyy-MM-dd HH:mm")
+      })
+      a
+    })
+    val grouped = dateDS.groupBy("passtime", "corssid").count()
+    grouped
 
   }
 
