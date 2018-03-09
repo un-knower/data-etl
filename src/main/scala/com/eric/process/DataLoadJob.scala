@@ -31,7 +31,6 @@ object DataLoadJob {
   def loadFromHBase(spark: SparkSession, startTime: String, stopTime: String): Dataset[VehicleData] = {
     import spark.implicits._
 
-    val startTime = System.currentTimeMillis()
     val conf = HBaseConfiguration.create()
     conf.set(TableInputFormat.INPUT_TABLE, vehicleInfoTable)
     val scan = new Scan()
@@ -39,7 +38,8 @@ object DataLoadJob {
     // (vehiclelogo, vehicletype, vehiclecolor)
     scan.addFamily(Bytes.toBytes(vehicleInfoTablePropertyFamily))
     scan.addColumn(Bytes.toBytes(vehicleInfoTablePropertyFamily), Bytes.toBytes(vehicleDataPropertyColumn))
-
+    scan.setStartRow(Bytes.toBytes(startTime))
+    scan.setStopRow(Bytes.toBytes(stopTime))
     val benchmarkTime = DateTimeUtils.getDateBeginTime(System.currentTimeMillis()) //当天0点
 
     LOGGER.info("cfd: {}", DateTimeUtils.format(benchmarkTime))
@@ -49,7 +49,6 @@ object DataLoadJob {
     val proto = ProtobufUtil.toScan(scan)
     conf.set(TableInputFormat.SCAN, Base64.encodeBytes(proto.toByteArray()))
 
-    // 获取过车分析结果表记录
     val flowResultRDD = spark.sparkContext.newAPIHadoopRDD(conf, classOf[TableInputFormat],
       classOf[org.apache.hadoop.hbase.io.ImmutableBytesWritable],
       classOf[org.apache.hadoop.hbase.client.Result])
@@ -76,7 +75,7 @@ object DataLoadJob {
     })
 
     LOGGER.info("vehicleInfoDS count: {}", vehicleRDD.take(2))
-    val time = System.currentTimeMillis() - startTime
+    val time = System.currentTimeMillis()
     LOGGER.info("fetch vehicleInfoDS take time: {}", time)
     vehicleDS
   }

@@ -1,5 +1,7 @@
 package com.eric
 
+import com.eric.data.{VehicleData, VehicleDateData}
+import com.eric.meta.HBaseVehicleRecord
 import com.eric.process.DataConvertJob
 import com.eric.utils.SparkHoldUtil
 import org.apache.spark.sql.SparkSession
@@ -13,8 +15,10 @@ object DataExportTask {
   val LOGGER = LoggerFactory.getLogger(DataExportTask.getClass)
 
   def execute(sparkSession: SparkSession, zk: String) = {
-    val df = DataConvertJob.loadData(sparkSession, "00", "33")
-    DataConvertJob.saveData(df)
+    val df = DataConvertJob.loadData(sparkSession, "1711", "17119999999999999999")
+    import sparkSession.implicits._
+    DataConvertJob.convert(sparkSession, df.as[VehicleData])
+    //DataConvertJob.saveData(df)
   }
 
   def main(args: Array[String]): Unit = {
