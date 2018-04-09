@@ -3,7 +3,7 @@ package com.eric.process
 import com.eric.common.DateTimeUtils
 import com.eric.data.VehicleData
 import org.apache.spark
-import org.apache.spark.sql.{DataFrame, Dataset, Row, SparkSession}
+import org.apache.spark.sql._
 import org.slf4j.LoggerFactory
 
 /**
@@ -30,9 +30,9 @@ object DataConvertJob {
       a
     })
 
-    val grouped = dateDS.groupBy("passtime", "crossid").count().toJSON
+    val grouped = dateDS.groupBy("passtime", "crossid").count().toDF("passtime", "corssid", "count")
     val dataArray = grouped.take(10)
-    grouped.toDF().repartition(1).write.csv("/home/17111")
+    grouped.repartition(1).write.mode(SaveMode.Overwrite).csv("10.17.139.42://home/1711")
     grouped.collect()
     dataArray
   }
