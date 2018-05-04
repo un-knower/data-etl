@@ -6,6 +6,7 @@ package com.eric.util
 
 import java.io.IOException
 
+import com.eric.utils.DataHandler
 import com.google.protobuf.InvalidProtocolBufferException
 import org.apache.hadoop.conf.Configuration
 import org.apache.hadoop.hbase.HBaseConfiguration
@@ -19,8 +20,14 @@ import org.apache.hadoop.mapreduce.Job
 import org.apache.spark.SparkContext
 import org.apache.spark.rdd.RDD
 
+import scala.reflect.ClassTag
 
-object HBaseUtil {
+
+object HBaseUtil extends DataHandler {
+
+  override def read[T: ClassTag](sc: SparkContext): RDD[T] = ???
+
+  override def save[T: ClassTag](rdd: RDD[T]): Unit = ???
 
   /**
     * 加载 HBase 数据，格式解析由外部类执行
@@ -35,7 +42,6 @@ object HBaseUtil {
       classOf[ImmutableBytesWritable],
       classOf[Result]
     )
-
   }
 
 
@@ -80,4 +86,6 @@ object HBaseUtil {
     }
     ProtobufUtil.toScan(scan)
   }
+
+
 }

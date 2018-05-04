@@ -65,15 +65,6 @@ object DataLoadJob {
       })
     val vehicleDS = vehicleRDD.toDS()
 
-    val test1 = flowResultRDD.take(1).map(res => {
-      val rowKey: String = Bytes.toString(res._2.getRow)
-      val dataJson: String = Bytes.toString(res._2.getValue(Bytes.toBytes("cf"), Bytes.toBytes("data")))
-      (rowKey, dataJson)
-      val hBaseVehicleRecord = new HBaseVehicleRecord(rowKey, dataJson).getArrayData
-      val vehicleData =  VehicleData(hBaseVehicleRecord(6), hBaseVehicleRecord(8), hBaseVehicleRecord(3), hBaseVehicleRecord(2))
-      vehicleData
-    })
-
     LOGGER.info("vehicleInfoDS count: {}", vehicleRDD.take(2))
     val time = System.currentTimeMillis()
     LOGGER.info("fetch vehicleInfoDS take time: {}", time)
